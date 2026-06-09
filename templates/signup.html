@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %} 
+{% block content %}
+<h1 class="mb-4">Запись на мастер-классы</h1>
+        <img src="{% static 'polee.png' %}" width="760px" style="margin-left: 3%; margin-right: 10%; margin-top: 10px; margin-bottom: 10px">
+
+<div class="row" style="gap: 105px">
+    <div class="col-md-8">
+        <h2 class="h3 mb-3">Доступные мастер-классы</h2>
+        
+        {% if master_classes %}
+            <div class="row">
+                {% for mc in master_classes %}
+                    <div class="col-md-6 mb-4" style="font-size: 16pt; line-height: 30px">
+                        <div class="card h-100 w-200 masterclass-card {% if mc.available_slots <= 0 %}border-danger{% endif %}">
+                            {% if mc.image %}
+                                <img src="{{ mc.image.url }}" class="card-img-top" alt="{{ mc.title }}" style="height: 180px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light text-center py-4">
+                                    <i class="bi bi-easel fs-1 text-muted"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-body">
+                                <h5 class="card-title">{{ mc.title }}</h5>
+                                <p class="card-text">{{ mc.description|truncatechars:100 }}</p>
+                                
+                                <div class="mb-2">
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-calendar"></i> {{ mc.date_time|date:"d.m.Y" }}
+                                    </span>
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-clock"></i> {{ mc.date_time|date:"H:i" }}
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-hourglass"></i> {{ mc.duration }} мин.
+                                    </span>
+                                </div>
+                                
+                                <p class="card-text">
+                                    <strong class="text-primary">{{ mc.price }} ₽</strong><br>
+                                    {% if mc.available_slots > 0 %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-people"></i> Свободно: {{ mc.available_slots }}/{{ mc.max_participants }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-people"></i> Нет мест
+                                        </span>
+                                    {% endif %}
+                                </p>
+                                
+                                {% if user.is_authenticated %}
+                                    {% if mc.available_slots > 0 %}
+                                        {% if mc.id in user_registrations %}
+                                            <button class="btn btn-success w-100" disabled>
+                                                <i class="bi bi-check-circle"></i> Вы уже записаны
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-primary w-100 signup-btn" 
+                                                    data-mc-id="{{ mc.id }}"
+                                                    data-mc-title="{{ mc.title }}"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#signupModal">
+                                                <i class="bi bi-pencil-square"></i> Записаться
+                                            </button>
+                                        {% endif %}
+                                    {% else %}
+                                        <button class="btn btn-secondary w-100" disabled>
+                                            <i class="bi bi-x-circle"></i> Нет мест
+                                        </button>
+                                    {% endif %}
+                                {% else %}
+                                <a href="{% url 'login' %}?next={% url 'signup' %}" class="btn btn-outline-primary w-100">                                        <i class="bi bi-box-arrow-in-right"></i> Войдите для записи
+                                    </a>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="card-footer bg-light">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> 
+                                    {% if mc.available_slots > 0 %}
+                                        Осталось {{ mc.available_slots }} {{ mc.available_slots|ru_plural:"место,места,мест" }}
+                                    {% else %}
+                                        Все места заняты
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> 
+                <strong>Нет доступных мастер-классов!</strong><br>
+                Возможные причины:
+                <ul class="mt-2">
+                    <li>Все мастер-классы уже прошли (дата меньше текущей)</li>
+                    <li>Мастер-классы не созданы в базе данных</li>
+                    <li>У мастер-классов неправильно установлена дата</li>
+                </ul>
+                
+                {% if user.is_authenticated and user.profile.role == 'admin' %}
+                    <a href="{% url 'add_masterclass' %}" class="btn btn-success mt-2">
+                        <i class="bi bi-plus-circle"></i> Создать мастер-класс
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4" style="font-size: 14pt; line-height: 30px; padding: 10px">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Как записаться</h5>
+            </div>
+            <div class="card-body">
+                <ol class="list-group list-group-numbered list-group-flush">
+                    <li class="list-group-item border-0">Выберите интересующий вас мастер-класс</li>
+                    <li class="list-group-item border-0">Нажмите кнопку "Записаться"</li>
+                    <li class="list-group-item border-0">Подтвердите запись в появившемся окне</li>
+                    <li class="list-group-item border-0">Оплатите мастер-класс (по желанию)</li>
+                </ol>
+            </div>
+        </div>
+                <img src="{% static 'pole.png' %}" width="260px" style="margin-left:8%; margin-right: 10%; margin-top: 10px; margin-bottom: 10px">
+
+        {% if user.is_authenticated %}
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-check"></i> Ваши записи</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_registrations_details %}
+                        {% for reg in user_registrations_details %}
+                            <div class="mb-3 p-2 border rounded {% if reg.master_class.date_time < now %}bg-light{% endif %}">
+                                <strong>{{ reg.master_class.title }}</strong><br>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i> {{ reg.master_class.date_time|date:"d.m.Y H:i" }}<br>
+                                    <i class="bi bi-currency-ruble"></i> {{ reg.master_class.price }} ₽
+                                </small>
+                                {% if reg.is_paid %}
+                                    <span class="badge bg-success float-end">Оплачено</span>
+                                {% else %}
+                                    <span class="badge bg-warning float-end">Не оплачено</span>
+                                {% endif %}
+                                {% if reg.master_class.date_time < now %}
+                                    <span class="badge bg-secondary float-end me-1">Прошёл</span>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p class="text-muted mb-0">Вы еще не записаны ни на один мастер-класс.</p>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">Вы еще не записаны ни на один мастер-класс.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal fade" id="signupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Подтверждение записи</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите записаться на мастер-класс:</p>
+                <h5 id="modalMcTitle" class="text-primary"></h5>
+                
+                <form id="signupForm" method="post" action="{% url 'signup' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="master_class" id="selectedMcId">
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> После подтверждения вы сможете оплатить мастер-класс в личном кабинете.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Отмена
+                </button>
+                <button type="submit" form="signupForm" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Подтвердить запись
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+            <img src="{% static 'polee.png' %}" width="760px" style="margin-left:0%; margin-right: 10%; margin-top: 10px; margin-bottom: 10px">
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const signupBtns = document.querySelectorAll('.signup-btn');
+    const modalTitle = document.getElementById('modalMcTitle');
+    const selectedMcId = document.getElementById('selectedMcId');
+    
+    signupBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const mcId = this.dataset.mcId;
+            const mcTitle = this.dataset.mcTitle;
+            
+            modalTitle.textContent = mcTitle;
+            selectedMcId.value = mcId;
+        });
+    });
+    
+    const signupForm = document.getElementById('signupForm');
+    signupForm.addEventListener('submit', function(e) {
+        if (!selectedMcId.value) {
+            e.preventDefault();
+            alert('Ошибка: не выбран мастер-класс');
+        }
+    });
+});
+</script>
+{% endblock %}

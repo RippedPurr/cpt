@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4" >
+<div class="row" style="justify-content: space-between">
+    <h1><i class="bi bi-easel"></i> Мастер-классы</h1>
+    {% if is_admin %}
+    <a href="{% url 'add_masterclass' %}" class="btn btn-success" style="height: 60px; margin-top: 20px">
+        <i class="bi bi-plus-circle"></i> Создать мастер-класс
+    </a>
+    {% endif %}</div>
+</div>
+<section>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h3">Ближайшие мастер-классы</h2>
+    </div>
+        <img src="{% static 'polee.png' %}" width="760px" style="margin-left:20%; margin-right: 20%; margin-top: 10px; margin-bottom: 10px">
+
+    {% if upcoming_classes %}
+        <div class="row" style="justify-content: center">
+            {% for mc in upcoming_classes %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 masterclass-card {% if mc.available_slots <= 0 %}border-danger{% endif %}">
+
+                        {% if mc.image %}<div class="masterclass-image-wrapper">
+                            <img src="{{ mc.image.url }}" class="card-img-top" alt="{{ mc.title }}" style="height: 200px; object-fit: cover;"></div>
+                        {% else %}
+                            <div class="bg-light text-center py-4">
+                                <i class="bi bi-easel fs-1 text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body" style="line-height: 25px">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">{{ mc.title }}</h5>
+                                {% if is_admin %}
+                                <div class="btn-group">
+                                    <a href="{% url 'edit_masterclass' mc.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'delete_masterclass' mc.id %}" class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Удалить мастер-класс {{ mc.title }}?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <p class="card-text">{{ mc.description|truncatechars:150 }}</p>
+                            
+                            <div class="mb-2">
+                                <span class="badge bg-primary">
+                                    <i class="bi bi-calendar"></i> {{ mc.date_time|date:"d.m.Y" }}
+                                </span>
+                                <span class="badge bg-info">
+                                    <i class="bi bi-clock"></i> {{ mc.date_time|date:"H:i" }}
+                                </span>
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-hourglass"></i> {{ mc.duration }} мин.
+                                </span>
+                            </div>
+                            
+                            <p class="card-text">
+                                <strong class="text-primary">{{ mc.price }} ₽</strong><br>
+                                {% if mc.available_slots > 0 %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-people"></i> Свободно: {{ mc.available_slots }}/{{ mc.max_participants }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-people"></i> Нет мест
+                                    </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="card-footer bg-white border-top-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                {% if user.is_authenticated %}
+                                    {% if mc.available_slots > 0 %}
+                                        <a href="{% url 'signup' %}" class="btn btn-primary flex-grow-1">
+                                            <i class="bi bi-pencil-square"></i> Записаться
+                                        </a>
+                                    {% else %}
+                                        <button class="btn btn-secondary flex-grow-1" disabled>
+                                            <i class="bi bi-x-circle"></i> Нет мест
+                                        </button>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'login' %}?next={% url 'master_classes' %}" class="btn btn-outline-primary flex-grow-1">
+                                        <i class="bi bi-box-arrow-in-right"></i> Войти для записи
+                                    </a>
+                                {% endif %}
+                                
+                                {% if is_admin %}
+                                <button class="btn btn-sm btn-outline-info ms-2" 
+                                        onclick="showParticipants({{ mc.id }})"
+                                        title="Показать участников">
+                                    <i class="bi bi-people"></i> {{ mc.participants_count }}
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Нет предстоящих мастер-классов.
+            {% if is_admin %}
+                <a href="{% url 'add_masterclass' %}" class="alert-link">Создайте первый мастер-класс</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+
+{% if past_classes %}
+    <section>
+        <h2 class="h3 mb-3">Прошедшие мастер-классы</h2>
+        <div class="row" style="justify-content: center">
+            {% for mc in past_classes %}
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-light" >
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between" style="font-size: 16pt">
+                                <h6 class="card-title" style="font-size: 20pt">{{ mc.title }}</h6>
+                                {% if is_admin %}
+                                <div>
+                                    <a href="{% url 'edit_masterclass' mc.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i> {{ mc.date_time|date:"d.m.Y H:i" }}<br>
+                                    <i class="bi bi-people"></i> Участников: {{ mc.participants_count }}
+                                </small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+
+{% if is_admin %}
+<div class="modal fade" id="participantsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Участники мастер-класса</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="participantsList" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Участник</th>
+                                <th>Email</th>
+                                <th>Телефон</th>
+                                <th>Дата записи</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody id="participantsTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center">Загрузка...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+        <img src="{% static 'polee.png' %}" width="760px" style="margin-left:20%; margin-right: 20%; margin-top: 10px; margin-bottom: 10px">
+
+<script>
+function showParticipants(masterclassId) {
+    const modal = new bootstrap.Modal(document.getElementById('participantsModal'));
+    const tbody = document.getElementById('participantsTableBody');
+    
+    fetch(`/api/masterclass/${masterclassId}/participants/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.participants.length > 0) {
+                let html = '';
+                data.participants.forEach(p => {
+                    html += `<tr>
+                        <td><strong>${p.name}</strong></td>
+                        <td>${p.email}</td>
+                        <td>${p.phone || '—'}</td>
+                        <td>${p.registered}</td>
+                        <td>${p.paid ? '<span class="badge bg-success">Оплачено</span>' : '<span class="badge bg-warning">Не оплачено</span>'}</td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Нет участников</td></tr>';
+            }
+        })
+        .catch(error => {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Ошибка загрузки</td></tr>';
+        });
+    
+    modal.show();
+}
+</script>
+{% endif %}
+{% endblock %}

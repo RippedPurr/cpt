@@ -1,0 +1,465 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if is_admin %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-speedometer2"></i> Панель администратора</h1>
+        <div>
+            <span class="badge bg-primary fs-6">{{ user.get_full_name|default:user.username }}</span>
+            <span class="badge bg-success fs-6">Администратор</span>
+        </div>
+    </div>
+    
+    <!-- Статистика -->
+
+    
+    <!-- Настройки профиля администратора -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-person-gear"></i> Настройки профиля</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ profile_form.phone.id_for_label }}" class="form-label">{{ profile_form.phone.label }}</label>
+                            {{ profile_form.phone }}
+                            {% if profile_form.phone.help_text %}
+                                <div class="form-text">{{ profile_form.phone.help_text }}</div>
+                            {% endif %}
+                            {% if profile_form.phone.errors %}
+                                <div class="text-danger">{{ profile_form.phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ profile_form.avatar.id_for_label }}" class="form-label">{{ profile_form.avatar.label }}</label>
+                            {{ profile_form.avatar }}
+                            {% if profile_form.avatar.help_text %}
+                                <div class="form-text">{{ profile_form.avatar.help_text }}</div>
+                            {% endif %}
+                            {% if profile_form.avatar.errors %}
+                                <div class="text-danger">{{ profile_form.avatar.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Текущий аватар</label><br>
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" class="rounded-circle" width="80" height="80" alt="avatar" style="object-fit: cover;">
+                    {% else %}
+                        <i class="bi bi-person-circle fs-1"></i>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Сохранить изменения
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Быстрое добавление -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="width: 100%">
+                <div class="card-header bg-primary text-white" >
+                    <h5 class="mb-0"><i class="fa-solid fa-circle-plus"></i> Быстрое добавление</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{% url 'add_post' %}" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fa-solid fa-align-left"></i> Новый пост
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'add_category' %}" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fa-solid fa-folder"></i> Новая категория
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'add_product' %}" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fa-solid fa-box"></i> Новый товар
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'add_masterclass' %}" class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fa-solid fa-scissors"></i>Новый мастер-класс
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Остальные блоки (мастер-классы, посты, заказы, товары) -->
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Ближайшие мастер-классы -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Ближайшие мастер-классы (7 дней)</h5>
+                </div>
+                <div class="card-body">
+                    <div id="masterclassCalendar">
+                        {% if upcoming_masterclasses %}
+                            {% for mc in upcoming_masterclasses %}
+                                <div class="masterclass-item mb-3 p-3 border rounded" 
+                                     data-mc-id="{{ mc.id }}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong>{{ mc.title }}</strong><br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar"></i> {{ mc.date_time|date:"d.m.Y H:i" }}<br>
+                                                <i class="bi bi-people"></i> {{ mc.participants_count }}/{{ mc.max_participants }}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <span class="badge {% if mc.available_slots > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ mc.available_slots }} мест
+                                            </span>
+                                            <a href="{% url 'edit_masterclass' mc.id %}" class="btn btn-sm btn-outline-primary ms-2">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">Нет мастер-классов на ближайшую неделю</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Последние посты -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-text"></i> Последние посты</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_posts %}
+                        {% for post in recent_posts %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>{{ post.title }}</strong><br>
+                                    <small class="text-muted">{{ post.created_at|date:"d.m.Y H:i" }}</small>
+                                </div>
+                                <div>
+                                    <a href="{% url 'edit_post' post.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'delete_post' post.id %}" class="btn btn-sm btn-outline-danger" 
+                                       onclick="return confirm('Удалить пост?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Нет постов</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <!-- Новые заказы -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-cart"></i> Новые заказы ({{ recent_orders|length }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for order in recent_orders %}
+                            <div class="list-group-item order-item" data-order-id="{{ order.id }}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Заказ #{{ order.id }}</h6>
+                                    <small>{{ order.order_date|timesince }} назад</small>
+                                </div>
+                                <p class="mb-1">
+                                    <strong>{{ order.user.get_full_name|default:order.user.username }}</strong> - 
+                                    {{ order.product.name }} ({{ order.quantity }} шт.)
+                                </p>
+                                <small>Статус: <span class="badge bg-warning">{{ order.get_status_display }}</span></small>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted">Нет новых заказов</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Последние товары -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-box"></i> Последние товары</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_products %}
+                        {% for product in recent_products %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>{{ product.name }}</strong><br>
+                                    <small class="text-muted">
+                                        {{ product.price }} ₽ | В наличии: {{ product.stock }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Удалить товар?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Нет товаров</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Последние мастер-классы -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-easel"></i> Последние мастер-классы</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_masterclasses %}
+                        {% for mc in recent_masterclasses %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>{{ mc.title }}</strong><br>
+                                    <small class="text-muted">
+                                        {{ mc.date_time|date:"d.m.Y H:i" }} | {{ mc.price }} ₽
+                                    </small>
+                                </div>
+                                <div>
+                                    <a href="{% url 'edit_masterclass' mc.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'delete_masterclass' mc.id %}" class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Удалить мастер-класс?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Нет мастер-классов</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Всплывающее окно для тултипов -->
+    <div id="tooltipPopup" class="participant-tooltip" style="display: none; position: absolute; background: white; border: 1px solid #ccc; border-radius: 5px; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 300px; z-index: 1000;"></div>
+    
+{% else %}
+    <!-- Обычный пользователь -->
+    <div class="row">
+        <div class="col-md-8">
+            <h1 class="mb-4">Личный кабинет</h1>
+        </div>
+        <div class="col-md-4 text-end" style="width: 200%">
+            {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" class="rounded-circle" width="64" height="64" alt="avatar">
+            {% else %}
+                <i class="bi bi-person-circle fs-1"></i>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Мои мастер-классы</h5>
+                </div>
+                <div class="card-body">
+                    {% if registrations %}
+                        {% for reg in registrations %}
+                            <div class="mb-3 p-2 border rounded {% if reg.master_class.date_time < now %}bg-light{% endif %}">
+                                <h6>{{ reg.master_class.title }}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i> {{ reg.master_class.date_time|date:"d.m.Y H:i" }}<br>
+                                    <i class="bi bi-currency-ruble"></i> {{ reg.master_class.price }} ₽
+                                </small>
+                                {% if reg.is_paid %}
+                                    <span class="badge bg-success float-end">Оплачено</span>
+                                {% else %}
+                                    <span class="badge bg-warning float-end">Не оплачено</span>
+                                {% endif %}
+                                {% if reg.master_class.date_time < now %}
+                                    <span class="badge bg-secondary float-end me-1">Прошёл</span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Вы еще не записаны на мастер-классы.</p>
+                        <a href="{% url 'signup' %}" class="btn btn-primary">Записаться</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bag"></i> Мои покупки</h5>
+                </div>
+                <div class="card-body">
+                    {% if orders %}
+                        {% for order in orders %}
+                            <div class="mb-3 p-2 border rounded">
+                                <h6>{{ order.product.name }}</h6>
+                                <small class="text-muted">
+                                    Количество: {{ order.quantity }} шт.<br>
+                                    Сумма: {{ order.total_price }} ₽<br>
+                                    Дата: {{ order.order_date|date:"d.m.Y H:i" }}
+                                </small>
+                                <span class="badge {% if order.status == 'completed' %}bg-success{% elif order.status == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %} float-end">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">У вас пока нет покупок.</p>
+                        <a href="{% url 'catalog' %}" class="btn btn-primary">Перейти в каталог</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-person-gear"></i> Настройки профиля</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for field in profile_form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="text-danger">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Сохранить изменения
+                </button>
+            </form>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if is_admin %}
+    // Всплывающие подсказки для мастер-классов
+    const masterclassItems = document.querySelectorAll('.masterclass-item');
+    const tooltip = document.getElementById('tooltipPopup');
+    
+    masterclassItems.forEach(item => {
+        let timeout;
+        
+        item.addEventListener('mouseenter', function(e) {
+            timeout = setTimeout(() => {
+                const mcId = this.dataset.mcId;
+                const rect = this.getBoundingClientRect();
+                
+                fetch(`/api/masterclass/${mcId}/participants/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let html = `<h6>${data.masterclass}</h6>`;
+                        html += `<p><strong>Участников:</strong> ${data.count}</p>`;
+                        
+                        if (data.participants.length > 0) {
+                            html += '<ul class="list-unstyled">';
+                            data.participants.forEach(p => {
+                                html += `<li><strong>${p.name}</strong>`;
+                                if (p.email) html += `<br><small>Email: ${p.email}</small>`;
+                                if (p.phone) html += `<br><small>Тел: ${p.phone}</small>`;
+                                if (p.paid) html += ' <span class="badge bg-success">Оплачено</span>';
+                                html += '</li>';
+                            });
+                            html += '</ul>';
+                        } else {
+                            html += '<p class="text-muted">Нет участников</p>';
+                        }
+                        
+                        tooltip.innerHTML = html;
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = (rect.left + window.scrollX + 10) + 'px';
+                        tooltip.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+                    });
+            }, 500);
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            clearTimeout(timeout);
+            tooltip.style.display = 'none';
+        });
+    });
+    
+    // Всплывающие подсказки для заказов
+    const orderItems = document.querySelectorAll('.order-item');
+    
+    orderItems.forEach(item => {
+        let timeout;
+        
+        item.addEventListener('mouseenter', function(e) {
+            timeout = setTimeout(() => {
+                const orderId = this.dataset.orderId;
+                const rect = this.getBoundingClientRect();
+                
+                fetch(`/api/order/${orderId}/details/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let html = `<h6>Заказ #${data.order_id}</h6>`;
+                        html += `<p><strong>Покупатель:</strong> ${data.user}<br>`;
+                        html += `<strong>Email:</strong> ${data.email}<br>`;
+                        if (data.phone) html += `<strong>Тел:</strong> ${data.phone}<br>`;
+                        html += `<strong>Товар:</strong> ${data.product}<br>`;
+                        html += `<strong>Количество:</strong> ${data.quantity}<br>`;
+                        html += `<strong>Сумма:</strong> ${data.total_price} ₽<br>`;
+                        html += `<strong>Дата:</strong> ${data.order_date}<br>`;
+                        html += `<strong>Статус:</strong> ${data.status}</p>`;
+                        
+                        tooltip.innerHTML = html;
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = (rect.left + window.scrollX + 10) + 'px';
+                        tooltip.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+                    });
+            }, 500);
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            clearTimeout(timeout);
+            tooltip.style.display = 'none';
+        });
+    });
+    {% endif %}
+}); 
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <div style="margin-left: 5%">
+<div class="d-flex justify-content-between align-items-center mb-4" style="margin-bottom: -90px">
+    <h1><i class="bi bi-shop"></i> Каталог товаров</h1>
+
+    {% if is_admin %}
+    <div class="btn-group" style="margin-left: 42%; margin-bottom: -30px; margin-top: -70px">
+        <a href="{% url 'add_category' %}" class="btn btn-success" style="height: 60px; width: 240px">
+            <i class="bi bi-folder-plus" ></i> Добавить категорию
+        </a>
+        <a href="{% url 'add_product' %}" class="btn btn-primary" style="height: 60px; width: 240px">
+            <i class="bi bi-box-seam"></i> Добавить товар
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% for category in categories %}
+    {% if category.products.exists %}
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-3" style="margin-top: 130px; background-color: #FFFDFA; width: 1200px; margin-left: -10%">
+            <h2 style="font-size: 40px; color: #ec8f42; margin-left: 10%">{{ category.name }}</h2>
+            {% if is_admin %}
+            <div style="margin-top: -25px; margin-left: 10%">
+                <a href="{% url 'edit_category' category.id %}" class="btn btn-sm btn-outline-primary" style="color: #5e4d3a">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </a>
+                <a href="{% url 'delete_category' category.id %}" class="btn btn-sm btn-outline-danger" style="color: #6e1f3b"
+                   onclick="return confirm('Удалить категорию {{ category.name }}? Все товары категории также будут удалены!')">
+                    <i class="fa-solid fa-trash"></i> 
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="background-color: #3b2523; margin-left: -2%; width: 1000px; height: 100%; padding: 20px">
+        <div class="row" style="gap: 90px; margin-left: 10%; justify-content: space-between; max-width: 70%" >
+            {% for product in category.products.all %}
+                <div class="col-md-3 col-sm-6 col-12" >
+                <a href="{% url 'product_detail' product.id %}" style="text-decoration: none; color: #3b2523; font-size: 16pt; line-height: 34px" >
+                    <div class="card product-card h-100">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light text-center py-5">
+                                <i class="bi bi-image fs-1 text-muted"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text">{{ product.description|truncatechars:100 }}</p>
+                            <p class="card-text" style="margin-bottom: -120px">
+                                <strong class="text-primary">{{ product.price }} ₽</strong><br>
+                                <small class="text-muted">В наличии: {{ product.stock }} шт.</small>
+                            </p></div>
+                        </div>
+
+                        <div class="card-footer bg-white border-top-0" style="width: 300px">
+                            <div class="d-flex justify-content-between align-items-center">
+                                {% if user.is_authenticated %}
+                                    {% if product.stock > 0 %}
+                                        <a href="{% url 'buy_product' product.id %}" class="btn btn-primary flex-grow-1 me-2">
+                                            <i class="bi bi-cart"></i> Купить
+                                        </a>
+                                    {% else %}
+                                        <button class="btn btn-secondary flex-grow-1 me-2" disabled>Нет в наличии</button>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'login' %}?next={% url 'catalog' %}" class="btn btn-outline-primary flex-grow-1 me-2">
+                                        <i class="bi bi-box-arrow-in-right"></i> Войти для покупки
+                                    </a>
+                                {% endif %}
+
+                                {% if is_admin %}
+                                <div class="btn-group">
+                                    <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Удалить товар {{ product.name }}?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                </a>
+                </div>
+            {% endfor %}
+        </div><div>
+    {% endif %}
+{% empty %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Каталог пуст.
+        {% if is_admin %}
+            <a href="{% url 'add_category' %}" class="alert-link">Создайте первую категорию</a>
+        {% endif %}
+    </div>
+    <div class="modal fade" id="productModal{{ product.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ product.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if product.model_3d %}
+                    <model-viewer
+                        src="{{ product.model_3d.url }}"
+                        auto-rotate
+                        camera-controls
+                        style="width: 100%; height: 400px;">
+                    </model-viewer>
+                {% endif %}
+                <p>{{ product.description }}</p>
+                <h4>{{ product.price }} ₽</h4>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+{% endfor %}
+{% endblock %}

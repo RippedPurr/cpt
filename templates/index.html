@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="hero" style="width: auto">
+     <div class="hero-bg-images">
+        <img src="{% static 'images/glass1.png' %}" alt="" class="bg-img img-1">
+        <img src="{% static 'images/glass2.png' %}" alt="" class="bg-img img-2">
+        <img src="{% static 'images/glass3.png' %}" alt="" class="bg-img img-3">
+        <img src="{% static 'images/glass4.png' %}" alt="" class="bg-img img-4">
+    </div>
+        <div class="container" style="padding: 90px">
+            <div class="text-cont" style="margin-top: 10%">
+            <h2>Витражная мастерская GLASSTORY</h2>
+                <h3 style="width: 400px; line-height: 20px; font-weight: lighter">Витраж — это не просто декор, а способ наполнить дом особенным светом. Мы проектируем, режем стекло, собираем фрагменты вручную и отвечаем за каждый этап работы. В каталоге — готовые решения, а также возможность заказать изделие по вашим размерам и эскизу.
+Выберите мастер-класс или закажите витраж мечты.</h3>
+        <a href="{% url 'signup' %}" class="btn btn-primary" style=" margin-top: 10px; border-color: white; border: solid 1px">ЗАПИСАТЬСЯ</a>
+    </div>
+</div>
+    </div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-newspaper" style="margin-left: 50%"></i> БЛОГ</h1>
+    <img src="{% static 'pol.svg' %}" width="760px" style="margin-left:10%; margin-right: 10%; margin-top: 10px">
+    {% if user.is_authenticated and user.profile.role == 'admin' %}
+    <a href="{% url 'add_post' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Создать новый пост
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        {% for post in posts %}
+            <div class="card post-card mb-4">
+                {% if post.image %}
+                    <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="max-height: 400px; object-fit: cover;">
+                {% endif %}
+
+                <div class="card-body" style="font-size: 16pt; line-height: 22px">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title" style="font-size: 18pt">{{ post.title }}</h5>
+                        {% if user.is_authenticated and user.profile.role == 'admin' %}
+                        <div class="btn-group">
+                            <a href="{% url 'edit_post' post.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'delete_post' post.id %}" class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Удалить пост {{ post.title }}?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <p class="card-text">{{ post.content|linebreaksbr }}</p>
+
+                    <div class="text-muted">
+                        <small style="font-size: 12pt; margin-top: 15px">
+                            <i class="bi bi-person"></i> {{ post.author.get_full_name|default:post.author.username }} |
+                            <i class="bi bi-calendar"></i> {{ post.created_at|date:"d.m.Y H:i" }}
+                            {% if post.updated_at > post.created_at %}
+                                | <i class="bi bi-pencil-square"></i> ред. {{ post.updated_at|date:"d.m.Y H:i" }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+
+            </div>
+            <img src="{% static 'pol.svg' %}" width="500px" style="margin-left:10%; margin-right: 40%; margin-left: 0; margin-top: 10px">
+
+        {% empty %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Пока нет опубликованных постов.
+                {% if user.is_authenticated and user.profile.role == 'admin' %}
+                    <a href="{% url 'add_post' %}" class="alert-link">Создайте первый пост</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-4">
+    <div style="background-image: url({% static 'Group 22.png' %}); width: 400px; height: 300px; background-size: 500px">
+        <h1 style="text-align: center">Добро пожаловать</h1>
+        <h3 style="text-align: center; line-height: 20px; width: 350px; margin-left: 20px">glasstory - это не просто мастерская, 
+это уютное место для того сего пятого 
+десятого, открытия души, самовыражения
+воплощения прекрасного, стекло, медь,
+паяльник и проволока - и врата в мир
+духовного вышества открываются так же
+легко, как плавится сплав</h3>
+    </div>
+        <div class="card sticky-top" style="margin-top: 20px; margin-left: 40px;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0" style="font-size: 16pt"><i class="bi bi-calendar-event"></i> Ближайшие мастер-классы</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_masterclasses %}
+                    {% for mc in upcoming_masterclasses %}
+                        <div class="mb-3 {% if not forloop.last %}pb-3 border-bottom{% endif %}" style="font-size: 16pt">
+                            <h6>{{ mc.title }}</h6>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-clock"></i> {{ mc.date_time|date:"d.m.Y H:i" }}
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-people"></i> Мест: {{ mc.available_slots }}/{{ mc.max_participants }}
+                            </small>
+                            <small class="text-primary d-block">
+                                <i class="bi bi-currency-ruble"></i> {{ mc.price }} ₽
+                            </small>
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'signup' %}" class="btn btn-sm btn-outline-primary mt-2">
+                                    Записаться
+                                </a>
+                            {% endif %}
+
+                            {% if user.is_authenticated and user.profile.role == 'admin' %}
+                                <a href="{% url 'edit_masterclass' mc.id %}" class="btn btn-sm btn-outline-secondary mt-2 ms-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'master_classes' %}" class="btn btn-outline-primary btn-sm">
+                            Все мастер-классы <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">Нет ближайших мастер-классов</p>
+                    {% if user.is_authenticated and user.profile.role == 'admin' %}
+                        <a href="{% url 'add_masterclass' %}" class="btn btn-sm btn-success mt-2 w-100">
+                            <i class="bi bi-plus-circle"></i> Создать мастер-класс
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+        <img src="{% static 'polee.png' %}" width="760px" style="margin-left:10%; margin-right: 10%; margin-top: 10px">
+
+{% endblock %}

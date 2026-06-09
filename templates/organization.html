@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Для организаций</h1>
+            <img src="{% static 'polee.png' %}" width="760px" style=" margin-right: 10%; margin-top: 10px; margin-bottom: 10px">
+
+    <div class="row mb-5" style="margin-left: 8%">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-building fs-1 text-primary"></i></h5>
+                    <h3>Корпоративное обучение</h3>
+                    <p class="card-text">
+                        Мы предлагаем специальные программы для организаций:
+                    </p>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success"></i> Групповые мастер-классы</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success"></i> Индивидуальные программы</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success"></i> Тимбилдинг мероприятия</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success"></i> Обучение сотрудников</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-gift fs-1 text-success"></i></h5>
+                    <h3>Подарочные сертификаты</h3>
+                    <p class="card-text">
+                        Приобретите подарочные сертификаты для своих сотрудников и партнеров:
+                    </p>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success"></i> На любую сумму</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success"></i> Индивидуальный дизайн</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success"></i> Срок действия 1 год</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success"></i> Оптовые скидки</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row" style="margin-left: 8%">
+        <div class="col-12">
+            <div class="card bg-light" style="width: 620px">
+                <div class="card-body">
+                    <h3 class="mb-4">Свяжитесь с нами</h3>
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="companyName" class="form-label">Название компании</label>
+                                <input type="text" class="form-control" id="companyName" required style="width: 270px">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="contactPerson" class="form-label">Контактное лицо</label>
+                                <input type="text" class="form-control" id="contactPerson" required style="width: 270px">
+                            </div>
+                        </div>
+                        
+                        <div class="row" >
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" required style="width: 270px">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Телефон</label>
+                                <input type="tel" class="form-control" id="phone" required style="width: 270px">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Сообщение</label>
+                            <textarea class="form-control" id="message" rows="5" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-send"></i> Отправить запрос
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+            <img src="{% static 'polee.png' %}" width="760px" style=" margin-right: 10%; margin-top: 10px; margin-bottom: 10px">
+
+{% endblock %}
